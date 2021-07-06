@@ -45,24 +45,30 @@ function ImageToJpg($originalImage, $quality){
 
     imagejpeg($imageTmp, $outputImage, $quality);
     imagedestroy($imageTmp);
+    unlink($originalImage);
+
 
     return $outputImage;
 }
 
 if($folder = opendir('./')){
     if(!is_dir(getcwd().'/JPG')){
-        if(!mkdir(getcwd().'/JPG')){
+        if(!mkdir(getcwd().'/JPG', true)){
             echo 'Cannot create folder :(';
         }
     }
     $count = 0;
     while(false !== ($filename = readdir($folder))){
-        if(!is_dir($filename) && preg_match('/jpg|jpeg|png|gif|webp|bmp/i', array_pop(explode('.', $filename)))){
-            chmod(ImageToJpg($filename, 90), 0777);
-            $count++;
+        if(!is_dir($filename)){
+            if(preg_match('/jpg|jpeg|png|gif|webp|bmp/i', array_pop(explode('.', $filename)))){
+                chmod(ImageToJpg($filename, 90), 0777);
+                $count++;
+            }
+            elseif(!preg_match('/'.basename($_SERVER['PHP_SELF']).'|LICENSE|README.md/i',$filename)){
+                echo "Unable to convert the file ".$filename."\n";
+            }
         }
     }
-    // echo $count.' images converted to JPG.';
     chmod(getcwd().'/JPG', 0777);
     closedir($folder);
 }
