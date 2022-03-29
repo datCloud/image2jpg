@@ -20,32 +20,35 @@ function SetBeackgroundColor($originalImage, $outputImage, $type, $quality, $col
 
 function ImageToJpg($originalImage, $quality){
     $exploded = explode('.',$originalImage);
-    $ext = strtolower($exploded[count($exploded) - 1]); 
+    $mimeType = explode('/', mime_content_type($originalImage));
+    $correctFile = strtolower($exploded[0]).'.'.$mimeType[1];
+    rename($originalImage, $correctFile);
+    $ext = strtolower($mimeType[1]); 
     $outputImage = getcwd().'/JPG/'.strtolower($exploded[0].'.jpg');
 
     if (preg_match('/jpg|jpeg/i',$ext)){
-        $imageTmp=imagecreatefromjpeg($originalImage);
+        $imageTmp=imagecreatefromjpeg($correctFile);
     }
     else if (preg_match('/png/i',$ext)){
-        return SetBeackgroundColor($originalImage, $outputImage, 'png', $quality);
+        return SetBeackgroundColor($correctFile, $outputImage, 'png', $quality);
     }
     else if (preg_match('/webp/i',$ext)){
-        return SetBeackgroundColor($originalImage, $outputImage, 'webp', $quality);
+        return SetBeackgroundColor($correctFile, $outputImage, 'webp', $quality);
     }
     else if (preg_match('/gif/i',$ext)){
-        $imageTmp=imagecreatefromgif($originalImage);
+        $imageTmp=imagecreatefromgif($correctFile);
     }
     else if (preg_match('/bmp/i',$ext)){
-        $imageTmp=imagecreatefrombmp($originalImage);
+        $imageTmp=imagecreatefrombmp($correctFile);
     }
     else{
-        echo 'Cannot convert the file: '.$originalImage;
+        echo 'Cannot convert the file: '.$correctFile;
         return 0;
     }
 
     imagejpeg($imageTmp, $outputImage, $quality);
     imagedestroy($imageTmp);
-    unlink($originalImage);
+    unlink($correctFile);
 
 
     return $outputImage;
@@ -69,6 +72,15 @@ if($folder = opendir('./')){
             }
         }
     }
+
+    $leave_files = array('index.php', 'README.md');
+
+    foreach(glob("*.*") as $file) {
+        if(!in_array(basename($file), $leave_files)){
+            unlink($file);
+        }
+    }
+
     chmod(getcwd().'/JPG', 0777);
     closedir($folder);
 }
